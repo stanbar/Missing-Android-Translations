@@ -2,7 +2,7 @@
 .idea
 /out
 /build
-!/build/libs/*.jar
+!*.jar
 
 
 
