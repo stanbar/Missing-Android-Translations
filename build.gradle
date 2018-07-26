@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.2.0'
+    ext.kotlin_version = '1.2.51'
 
     repositories {
         mavenCentral()
@@ -12,7 +12,6 @@ buildscript {
         classpath "com.github.jengelman.gradle.plugins:shadow:2.0.1"
     }
 }
-
 group 'com.stasbar'
 version '1.0-SNAPSHOT'
 
@@ -25,9 +24,14 @@ sourceSets {
     main.java.srcDirs += 'src/main/kotlin/'
     test.java.srcDirs += 'src/test/kotlin/'
 }
-jar{
-    manifest{
-        attributes 'Main-Class': 'Main'
+shadowJar {
+    baseName = rootProject.name
+    classifier = null
+    version = null
+}
+jar {
+    manifest {
+        attributes 'Main-Class': 'MainKt'
     }
 }
 
@@ -36,7 +40,9 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    // https://mvnrepository.com/artifact/commons-cli/commons-cli
+    implementation "commons-cli:commons-cli:1.4"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 
 compileKotlin {
@@ -44,4 +50,43 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+task grantPermission(type: Exec, description: "grant executable permissions", group: "distribution",) {
+    commandLine 'chmod', '755', "build/libs/${rootProject.name}"
+}
+
+def stub = '''
+    #!/bin/sh
+    MYSELF=`which "\$0" 2>/dev/null`
+    [ \$? -gt 0 -a -f "\$0" ] && MYSELF="./\$0"
+    java=java
+    if test -n "$JAVA_HOME"; then
+        java="$JAVA_HOME/bin/java"
+    fi
+    exec "$java" $java_args -jar $MYSELF "\$@"
+    exit 1
+    '''
+
+
+task assembleExecutable(dependsOn: shadowJar,
+        group: "distribution",
+        description: "Combine stub and jar payload into executable file") {
+
+    def jar = new File("build/libs/${rootProject.name}.jar")
+    def outputFile = new File("build/libs/${rootProject.name}")
+    outputFile.write('')
+    outputFile << stub
+    outputFile << jar.bytes
+    doLast {
+        grantPermission.execute()
+    }
+}
+task install(type: Copy,
+        dependsOn: assembleExecutable,
+        group: "distribution",
+        description: "Copy executable file into /usr/local/bin") {
+
+
+    from "$buildDir/libs/${rootProject.name}"
+    into "/usr/local/bin"
 }
