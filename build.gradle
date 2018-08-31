@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.2.51'
+    ext.kotlin_version = '1.2.61'
 
     repositories {
         mavenCentral()
@@ -13,7 +13,7 @@ buildscript {
     }
 }
 group 'com.stasbar'
-version '1.0-SNAPSHOT'
+version '1.1'
 
 
 apply plugin: "com.github.johnrengelman.shadow"
@@ -38,11 +38,13 @@ jar {
 repositories {
     mavenCentral()
 }
-
+ext {
+    jgit_version = '5.0.2.201807311906-r'
+}
 dependencies {
-    // https://mvnrepository.com/artifact/commons-cli/commons-cli
     implementation "commons-cli:commons-cli:1.4"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.eclipse.jgit:org.eclipse.jgit:$jgit_version"
 }
 
 compileKotlin {
