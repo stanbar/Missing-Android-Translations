@@ -34,6 +34,7 @@ fun main(args: Array<String>) {
         println("Project name: $name")
 
         val tempDir = Files.createTempDirectory(name)
+        tempDir.toFile().deleteOnExit()
         println("Temp directory: $tempDir")
         // tempDir becomes the srcDirectory
         srcDir = tempDir.toString()
@@ -80,6 +81,8 @@ fun main(args: Array<String>) {
 
         saveToFile(untranslatedFilesDirectory, localeCode, outputExtension, untranslated)
     }
+    globalStrings.copyTo(File(untranslatedFilesDirectory, "new-language-strings.$outputExtension"), true)
+
 }
 
 
